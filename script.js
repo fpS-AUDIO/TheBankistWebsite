@@ -19,6 +19,33 @@ const btnScrollTo = document.querySelector(`.btn--scroll-to`);
 
 const section1 = document.getElementById(`section--1`);
 
+///////////////////////////////////////////////
+//// page navigation with smooth scrolling ////
+///////////////////////////////////////////////
+
+// To implement the page navigation I used the event delegation
+// so I use the fact that event is bubbled up and
+// I need to attach event listener to the common parent (container) of all interested elements.
+
+//  add event listener to common parent (container) of all interested elements.
+document
+  .querySelector(`.nav__links`)
+  .addEventListener(`click`, function (event) {
+    // prevent default behavior
+    event.preventDefault();
+
+    // determine what element originated the event
+    const eventElement = event.target;
+
+    // check if eventElement is actually interested element (.nav__link)
+    if (eventElement.classList.contains(`nav__link`)) {
+      // if it's interested element get the href attribute of the element and store it in "idHref"
+      const idHref = eventElement.getAttribute(`href`);
+      // then scroll to that id "idHref"
+      document.querySelector(idHref).scrollIntoView({ behavior: `smooth` });
+    }
+  });
+
 ///////////////////
 //// Functions ////
 ///////////////////
@@ -94,8 +121,16 @@ btnScrollTo.addEventListener(`click`, function (event) {
 
   // scroll to the correct position
   window.scroll(scrollOptions);
+
+  // MODERN WAY:
+  // element.scrollIntoView({behavior: `smooth`});
+  // section1.scrollIntoView({ behavior: `smooth` });
 });
 
 ///////////////////////////////////////////////////////////
 console.log(`--------------THEORY LECT------------------`);
 ///////////////////////////////////////////////////////////
+
+/////////////////////////////////
+// Building a tabbed component //
+/////////////////////////////////
