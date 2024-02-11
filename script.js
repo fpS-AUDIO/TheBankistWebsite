@@ -9,6 +9,11 @@
 
 const header = document.querySelector(`.header`);
 const logoIMG = document.querySelector(`.nav__logo`);
+const navBar = document.querySelector(`.nav`);
+
+const tabsContainer = document.querySelector(`.operations__tab-container`);
+const tabsBtns = document.querySelectorAll(`.operations__tab`);
+const tabsContents = document.querySelectorAll(`.operations__content`);
 
 const modal = document.querySelector('.modal');
 const overlay = document.querySelector('.overlay');
@@ -45,6 +50,80 @@ document
       document.querySelector(idHref).scrollIntoView({ behavior: `smooth` });
     }
   });
+
+////////////////////////////////////////////////////
+// implementing the opacity effect on <nav> links //
+////////////////////////////////////////////////////
+
+// NOTE:
+//  `mouseover` and `mouseout` do bubbling
+//  `mouseenter` and `mouseleave` don't do bubbling
+
+// The best way to pass argument into an event handlers' callback function
+// is to use bind method, set the `this` keyword and pass `this` as variable inside the callback body
+// any event handler function can have only 1 real argument, which is the `event`
+// if you want to pass more arguments set `this` in bind to an array or object
+
+const changeOpacityNav = function (event) {
+  // get the element provocated the event
+  const provocatorEvent = event.target;
+
+  // check if `provocatorEvent` is actual <a> so with class "nav__link"
+  if (provocatorEvent.classList.contains(`nav__link`)) {
+    // get all the siblings of `provocatorEvent`
+    const siblingsProvocator = provocatorEvent
+      .closest(`.nav`)
+      .querySelectorAll(`.nav__link`);
+
+    // get also logo image
+    const imageNav = provocatorEvent.closest(`.nav`).querySelector(`img`);
+
+    // change the opacity of all `siblingsProvocator` but not of the `provocatorEvent`
+    siblingsProvocator.forEach(sibling => {
+      if (sibling !== provocatorEvent) sibling.style.opacity = this;
+    });
+
+    // change also the opacity of logo image
+    imageNav.style.opacity = this;
+  }
+};
+
+navBar.addEventListener(`mouseover`, changeOpacityNav.bind(0.5));
+navBar.addEventListener(`mouseout`, changeOpacityNav.bind(1));
+
+/////////////////////////////////
+// Building a tabbed component //
+/////////////////////////////////
+
+// using event delegation, so add event listener on container
+tabsContainer.addEventListener(`click`, function (event) {
+  // preventing default just to be sure (not really necessary)
+  event.preventDefault();
+
+  // get the element (during bubbling) which provocated event --> event.target
+  // and find the actual button because there is the <span> inside --> .closest(`.operations__tab`);
+  const clickedBtn = event.target.closest(`.operations__tab`);
+
+  // if `clickedBtn` is null so there was a click on container and not button then just exit function
+  if (!clickedBtn) return;
+
+  // otherwise get the `data-tab` attribute to understand which content should be shown
+  const numberContent = clickedBtn.dataset.tab;
+
+  // remove active class from all tab buttons
+  // and add active class only on clicked tab button
+  tabsBtns.forEach(el => el.classList.remove(`operations__tab--active`));
+  clickedBtn.classList.add(`operations__tab--active`);
+
+  // remove active class from all <div>s with content to show
+  // and add active class only to <div> with correct numberContent class
+  tabsContents.forEach(el =>
+    el.classList.remove(`operations__content--active`)
+  );
+  document
+    .querySelector(`.operations__content--${numberContent}`)
+    .classList.add(`operations__content--active`);
+});
 
 ///////////////////
 //// Functions ////
@@ -127,10 +206,43 @@ btnScrollTo.addEventListener(`click`, function (event) {
   // section1.scrollIntoView({ behavior: `smooth` });
 });
 
-///////////////////////////////////////////////////////////
-console.log(`--------------THEORY LECT------------------`);
-///////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// Implementing a .nav sticky navigation using the intersection Observer API //
+///////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////
-// Building a tabbed component //
-/////////////////////////////////
+// making an oberver which obsevre the .header element
+// and adds the .sticky class to the .nav when .header is not visible
+
+// Remember (defined before):
+// const header = document.querySelector(`.header`);
+// const navBar = document.querySelector(`.nav`);
+
+// defining the callback for headerObserver
+const addRemoveSticky = function (entries) {
+  // same as "const entry = entries[0]" but using destructuring
+  const [entry] = entries;
+  console.log(entry);
+  // if header is not intersecting the viewport add .sticky class to the .nav
+  // else remove the .sticky class from the .nav
+  if (!entry.isIntersecting) navBar.classList.add(`sticky`);
+  else navBar.classList.remove(`sticky`);
+};
+
+// calculate the height of navBar to the dinamically add margin to the options object
+const navbarHeight = navBar.getBoundingClientRect().height;
+
+// defining options object for headerObserver
+const headerObserverOptions = {
+  root: null,
+  threshold: 0,
+  rootMargin: `-${navbarHeight}px`,
+};
+
+// defining the observer
+const headerObserver = new IntersectionObserver(
+  addRemoveSticky,
+  headerObserverOptions
+);
+
+// start observing the .header
+headerObserver.observe(header);
