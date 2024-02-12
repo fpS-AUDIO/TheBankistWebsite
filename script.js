@@ -23,6 +23,9 @@ const btnsOpenModal = document.querySelectorAll('.btn--show-modal');
 const btnScrollTo = document.querySelector(`.btn--scroll-to`);
 
 const section1 = document.getElementById(`section--1`);
+const allSections = document.querySelectorAll(`.section`);
+
+const lazyImages = document.querySelectorAll(`img[data-src]`);
 
 ///////////////////////////////////////////////
 //// page navigation with smooth scrolling ////
@@ -217,11 +220,17 @@ btnScrollTo.addEventListener(`click`, function (event) {
 // const header = document.querySelector(`.header`);
 // const navBar = document.querySelector(`.nav`);
 
+// Remember:
+// .sticky {
+//   position: fixed;
+//   background-color: rgba(255, 255, 255, 0.95);
+// }
+
 // defining the callback for headerObserver
 const addRemoveSticky = function (entries) {
   // same as "const entry = entries[0]" but using destructuring
   const [entry] = entries;
-  console.log(entry);
+  // console.log(entry);
   // if header is not intersecting the viewport add .sticky class to the .nav
   // else remove the .sticky class from the .nav
   if (!entry.isIntersecting) navBar.classList.add(`sticky`);
@@ -246,3 +255,129 @@ const headerObserver = new IntersectionObserver(
 
 // start observing the .header
 headerObserver.observe(header);
+
+////////////////////////////////////////////////////////////////////
+// Revealing sections on scrolling with intersection Observer API //
+////////////////////////////////////////////////////////////////////
+
+// Remember:
+// const allSections = document.querySelectorAll(`.section`);
+
+// Remember:
+// .section--hidden {
+//   opacity: 0;
+//   transform: translateY(8rem);
+// }
+
+// function to reveal sections
+const revealSection = function (entries, observer) {
+  // select the only one entry of treshold
+  const entry = entries[0];
+
+  // if target in not intersecting just exit the function
+  if (!entry.isIntersecting) return;
+  // select the target and remove its hidden class
+  entry.target.classList.remove(`section--hidden`);
+  // also stop observing that target (very good for performance)
+  observer.unobserve(entry.target);
+};
+
+// creating options for oberverSections
+const revealSectionOptions = {
+  root: null,
+  threshold: 0.15,
+};
+
+// creating observer
+const oberverSections = new IntersectionObserver(
+  revealSection,
+  revealSectionOptions
+);
+
+// looping over all sections to observe them and hide them
+allSections.forEach(function (section) {
+  oberverSections.observe(section);
+  // and hide every section
+  section.classList.add(`section--hidden`);
+});
+
+////////////////////////////////////////////////////////
+// Lazy loading images with intersection Observer API //
+////////////////////////////////////////////////////////
+
+// Remember:
+/* <img
+  src="img/digital-lazy.jpg"
+  data-src="img/digital.jpg"
+  alt="Computer"
+  class="features__img lazy-img"
+/>; */
+
+// Remember:
+// const lazyImages = document.querySelectorAll(`img[data-src]`);
+
+// Remember:
+// .lazy-img {
+//   filter: blur(20px);
+// }
+
+/*  Explanation of how it works:
+
+ 1. First we are loading the images with really low resolution and size,
+    this helps the performance for slow internet users and old phones
+    for example: 
+    - img/digital-lazy.jpg is 200x120px and 16.8KB
+    - img/digital.jpg is 2000x1200px and 514KB
+
+ 2. Also we apply the .lazy-img class with blur effect on these lazy images,
+    this helps to hide the bad low resolution of images
+
+ 3. Then, when the user scrolls down, we change the `src` attribute (with low size image)
+    to the `data-src` attribute with the real size image.
+    Note: we do it with `rootMargin` property inside the options object of the observer,
+    this helps load the images before the user can see them, so he doesn't know they are loaded lazy.
+
+ 4. Only when the image is completly loaded we remove the .lazy-img class with blur effect.
+    To achive this this we use the eventListener for `load`.
+    Note: if we just remove this class right after changing the src attribute,
+    the users with slow internet may have issues and see pixeled images,
+    so first completly load image and then remove the blur effect.
+ */
+
+// creating function for complete load the lazy image
+const loadLazyImage = function (entries, observer) {
+  // get the actual entry object from array
+  const [entry] = entries;
+
+  // just exit the function is it's not intersecting
+  if (!entry.isIntersecting) return;
+
+  // replace src with data-src
+  entry.target.src = entry.target.dataset.src;
+
+  // only when completly loaded remove the blur
+  entry.target.addEventListener(`load`, function () {
+    entry.target.classList.remove(`lazy-img`);
+  });
+
+  // stop obersving the target for performance
+  observer.unobserve(entry.target);
+};
+
+// creating options for the lazyImgObserver
+const lazyImgObserverOptions = {
+  root: null,
+  threshold: 0,
+  rootMargin: `200px`,
+};
+
+// create observer for lazy images
+const lazyImgObserver = new IntersectionObserver(
+  loadLazyImage,
+  lazyImgObserverOptions
+);
+
+// looping over lazy images and start observing on each of them
+lazyImages.forEach(function (lazyImage) {
+  lazyImgObserver.observe(lazyImage);
+});
