@@ -27,6 +27,11 @@ const allSections = document.querySelectorAll(`.section`);
 
 const lazyImages = document.querySelectorAll(`img[data-src]`);
 
+const slider = document.querySelector(`.slider`);
+const slides = document.querySelectorAll(`.slide`);
+const slideRightBtn = document.querySelector(`.slider__btn--right`);
+const slideLeftBtn = document.querySelector(`.slider__btn--left`);
+
 ///////////////////////////////////////////////
 //// page navigation with smooth scrolling ////
 ///////////////////////////////////////////////
@@ -298,7 +303,7 @@ const oberverSections = new IntersectionObserver(
 allSections.forEach(function (section) {
   oberverSections.observe(section);
   // and hide every section
-  section.classList.add(`section--hidden`);
+  // section.classList.add(`section--hidden`);      // <<<--- UNCOMMENT THIS
 });
 
 ////////////////////////////////////////////////////////
@@ -381,3 +386,51 @@ const lazyImgObserver = new IntersectionObserver(
 lazyImages.forEach(function (lazyImage) {
   lazyImgObserver.observe(lazyImage);
 });
+
+//////////////////////
+// Slider Component //
+//////////////////////
+
+// Remember:
+// const slider = document.querySelector(`.slider`);
+// const slides = document.querySelectorAll(`.slide`);
+// const slideRightBtn = document.querySelector(`.slider__btn--right`);
+// const slideLeftBtn = document.querySelector(`.slider__btn--left`);
+
+
+// --- variables for slider ---
+let currentSlide = 0;
+const slidesNumber = slides.length;
+
+
+// --- functions for slider ---
+const goToSlide = function (slide) {
+  slides.forEach((sld, indx) => {
+    sld.style.transform = `translateX(${100 * (indx - slide)}%)`;
+  });
+};
+
+const goToNextSlide = function () {
+  if (currentSlide === slidesNumber - 1) {
+    currentSlide = 0;
+  } else {
+    currentSlide++;
+  }
+  goToSlide(currentSlide);
+};
+const goToPreviousSlide = function () {
+  if (currentSlide === 0) {
+    currentSlide = slidesNumber - 1;
+  } else {
+    currentSlide--;
+  }
+  goToSlide(currentSlide);
+};
+
+// initial view of slides
+goToSlide(currentSlide);
+
+// buttons event listeners
+slideRightBtn.addEventListener(`click`, goToNextSlide);
+slideLeftBtn.addEventListener(`click`, goToPreviousSlide);
+
